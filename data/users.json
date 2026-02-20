@@ -1,0 +1,18 @@
+[
+  [
+    "828767c3-e2a2-4d01-be02-ffdfea09f26e",
+    {
+      "id": "828767c3-e2a2-4d01-be02-ffdfea09f26e",
+      "name": "Олена Коваль",
+      "email": "olena@example.com"
+    }
+  ],
+  [
+    "a9d68a7b-4e03-4ccd-aefd-40a2c7737302",
+    {
+      "id": "a9d68a7b-4e03-4ccd-aefd-40a2c7737302",
+      "name": "Іван Петренко",
+      "email": "ivan@example.com"
+    }
+  ]
+]

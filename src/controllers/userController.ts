@@ -1,0 +1,35 @@
+import { Request, Response } from "express";
+import { userService } from "../services/userService";
+import { createUserSchema } from "../schemas";
+
+export const userController = {
+  getAll(req: Request, res: Response): void {
+    res.json(userService.getAll());
+  },
+
+  getById(req: Request, res: Response): void {
+    const user = userService.getById(req.params["id"] as string);
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json(user);
+  },
+
+  create(req: Request, res: Response): void {
+    const result = createUserSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ error: "Validation error", details: result.error.issues });
+      return;
+    }
+
+    try {
+      const user = userService.create(result.data);
+      res.status(201).json(user);
+    } catch (err: any) {
+      res.status(409).json({ error: err.message });
+    }
+  },
+};
