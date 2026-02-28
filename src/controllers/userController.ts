@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { userService } from "../services/userService";
-import { createUserSchema } from "../schemas";
+import { CreateUserInput } from "../schemas";
 
 export const userController = {
   getAll(req: Request, res: Response): void {
@@ -17,16 +17,8 @@ export const userController = {
   },
 
   create(req: Request, res: Response): void {
-    const result = createUserSchema.safeParse(req.body);
-    if (!result.success) {
-      res
-        .status(400)
-        .json({ error: "Validation error", details: result.error.issues });
-      return;
-    }
-
     try {
-      const user = userService.create(result.data);
+      const user = userService.create(req.body as CreateUserInput);
       res.status(201).json(user);
     } catch (err: any) {
       res.status(409).json({ error: err.message });

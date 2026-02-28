@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { loanService } from "../services/loanService";
-import { createLoanSchema } from "../schemas";
+import { CreateLoanInput } from "../schemas";
 
 export const loanController = {
   getAll(req: Request, res: Response): void {
@@ -8,16 +8,8 @@ export const loanController = {
   },
 
   create(req: Request, res: Response): void {
-    const result = createLoanSchema.safeParse(req.body);
-    if (!result.success) {
-      res
-        .status(400)
-        .json({ error: "Validation error", details: result.error.issues });
-      return;
-    }
-
     try {
-      const loan = loanService.create(result.data);
+      const loan = loanService.create(req.body as CreateLoanInput);
       res.status(201).json(loan);
     } catch (err: any) {
       res.status(422).json({ error: err.message });

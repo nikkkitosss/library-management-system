@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { bookService } from "../services/bookService";
-import { createBookSchema, updateBookSchema } from "../schemas";
+import { CreateBookInput, UpdateBookInput } from "../schemas";
 
 export const bookController = {
   getAll(req: Request, res: Response): void {
@@ -18,16 +18,8 @@ export const bookController = {
   },
 
   create(req: Request, res: Response): void {
-    const result = createBookSchema.safeParse(req.body);
-    if (!result.success) {
-      res
-        .status(400)
-        .json({ error: "Validation error", details: result.error.issues });
-      return;
-    }
-
     try {
-      const book = bookService.create(result.data);
+      const book = bookService.create(req.body as CreateBookInput);
       res.status(201).json(book);
     } catch (err: any) {
       res.status(409).json({ error: err.message });
@@ -35,16 +27,11 @@ export const bookController = {
   },
 
   update(req: Request, res: Response): void {
-    const result = updateBookSchema.safeParse(req.body);
-    if (!result.success) {
-      res
-        .status(400)
-        .json({ error: "Validation error", details: result.error.issues });
-      return;
-    }
-
     try {
-      const book = bookService.update(req.params["id"] as string, result.data);
+      const book = bookService.update(
+        req.params["id"] as string,
+        req.body as UpdateBookInput,
+      );
       if (!book) {
         res.status(404).json({ error: "Book not found" });
         return;
