@@ -1,53 +1,35 @@
-import { Request, Response } from "express";
 import { bookService } from "../services/bookService";
 import { CreateBookInput, UpdateBookInput } from "../schemas";
+import { handleAsync } from "../utils/handleAsync";
+import { NotFoundError } from "../utils/errors";
 
 export const bookController = {
-  getAll(req: Request, res: Response): void {
-    const allBooks = bookService.getAll();
-    res.json(allBooks);
-  },
+  getAll: handleAsync(async (_req, res) => {
+    res.json(await bookService.getAll());
+  }),
 
-  getById(req: Request, res: Response): void {
-    const book = bookService.getById(req.params["id"] as string);
-    if (!book) {
-      res.status(404).json({ error: "Book not found" });
-      return;
-    }
+  getById: handleAsync(async (req, res) => {
+    const book = await bookService.getById(req.params["id"]);
+    if (!book) throw new NotFoundError("Book not found");
     res.json(book);
-  },
+  }),
 
-  create(req: Request, res: Response): void {
-    try {
-      const book = bookService.create(req.body as CreateBookInput);
-      res.status(201).json(book);
-    } catch (err: any) {
-      res.status(409).json({ error: err.message });
-    }
-  },
+  create: handleAsync(async (req, res) => {
+    res.status(201).json(await bookService.create(req.body as CreateBookInput));
+  }),
 
-  update(req: Request, res: Response): void {
-    try {
-      const book = bookService.update(
-        req.params["id"] as string,
-        req.body as UpdateBookInput,
-      );
-      if (!book) {
-        res.status(404).json({ error: "Book not found" });
-        return;
-      }
-      res.json(book);
-    } catch (err: any) {
-      res.status(409).json({ error: err.message });
-    }
-  },
+  update: handleAsync(async (req, res) => {
+    const book = await bookService.update(
+      req.params["id"],
+      req.body as UpdateBookInput,
+    );
+    if (!book) throw new NotFoundError("Book not found");
+    res.json(book);
+  }),
 
-  delete(req: Request, res: Response): void {
-    const deleted = bookService.delete(req.params["id"] as string);
-    if (!deleted) {
-      res.status(404).json({ error: "Book not found" });
-      return;
-    }
+  delete: handleAsync(async (req, res) => {
+    const deleted = await bookService.delete(req.params["id"]);
+    if (!deleted) throw new NotFoundError("Book not found");
     res.status(204).send();
-  },
+  }),
 };

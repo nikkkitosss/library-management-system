@@ -1,31 +1,28 @@
-import { Request, Response } from "express";
 import { loanService } from "../services/loanService";
 import { CreateLoanInput } from "../schemas";
+import { handleAsync } from "../utils/handleAsync";
+import { NotFoundError } from "../utils/errors";
 
 export const loanController = {
-  getAll(req: Request, res: Response): void {
-    res.json(loanService.getAll());
-  },
+  getAll: handleAsync(async (req, res) => {
+    res.json(await loanService.getAll(req.user!.userId, req.user!.role));
+  }),
 
-  create(req: Request, res: Response): void {
-    try {
-      const loan = loanService.create(req.body as CreateLoanInput);
-      res.status(201).json(loan);
-    } catch (err: any) {
-      res.status(422).json({ error: err.message });
-    }
-  },
+  create: handleAsync(async (req, res) => {
+    const loan = await loanService.create(
+      req.body as CreateLoanInput,
+      req.user!.userId,
+    );
+    res.status(201).json(loan);
+  }),
 
-  returnBook(req: Request, res: Response): void {
-    try {
-      const loan = loanService.returnBook(req.params["id"] as string);
-      if (!loan) {
-        res.status(404).json({ error: "Loan not found" });
-        return;
-      }
-      res.json(loan);
-    } catch (err: any) {
-      res.status(422).json({ error: err.message });
-    }
-  },
+  returnBook: handleAsync(async (req, res) => {
+    const loan = await loanService.returnBook(
+      req.params["id"],
+      req.user!.userId,
+      req.user!.role,
+    );
+    if (!loan) throw new NotFoundError("Loan not found");
+    res.json(loan);
+  }),
 };
