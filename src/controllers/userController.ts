@@ -1,27 +1,21 @@
-import { Request, Response } from "express";
 import { userService } from "../services/userService";
-import { CreateUserInput } from "../schemas";
+import { handleAsync } from "../utils/handleAsync";
+import { NotFoundError } from "../utils/errors";
 
 export const userController = {
-  getAll(req: Request, res: Response): void {
-    res.json(userService.getAll());
-  },
+  getAll: handleAsync(async (_req, res) => {
+    res.json(await userService.getAll());
+  }),
 
-  getById(req: Request, res: Response): void {
-    const user = userService.getById(req.params["id"] as string);
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+  getById: handleAsync(async (req, res) => {
+    const user = await userService.getById(req.params["id"]);
+    if (!user) throw new NotFoundError("User not found");
     res.json(user);
-  },
+  }),
 
-  create(req: Request, res: Response): void {
-    try {
-      const user = userService.create(req.body as CreateUserInput);
-      res.status(201).json(user);
-    } catch (err: any) {
-      res.status(409).json({ error: err.message });
-    }
-  },
+  getMe: handleAsync(async (req, res) => {
+    const user = await userService.getById(req.user!.userId);
+    if (!user) throw new NotFoundError("User not found");
+    res.json(user);
+  }),
 };

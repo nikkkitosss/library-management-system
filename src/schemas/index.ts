@@ -1,35 +1,40 @@
 import { z } from "zod";
 
+const emailField = z.string().email("Invalid email");
+const passwordField = z
+  .string()
+  .min(8, "Password must be at least 8 characters");
+const nameField = z.string().min(1, "Name is required");
+const uuidField = z.string().uuid();
+
+export const registerSchema = z.object({
+  email: emailField,
+  password: passwordField,
+  name: nameField,
+});
+
+export const loginSchema = z.object({
+  email: emailField,
+  password: z.string().min(1, "Password is required"),
+});
+
 export const createBookSchema = z.object({
   title: z.string().min(1, "Title is required"),
   author: z.string().min(1, "Author is required"),
-  year: z
-    .number()
-    .int()
-    .min(1000, "Year must be a valid year")
-    .max(new Date().getFullYear(), "Year cannot be in the future"),
-  isbn: z.string().min(10, "ISBN must be at least 10 characters"),
+  year: z.number().int().min(1, "Year must be positive"),
+  isbn: z.string().min(1, "ISBN is required"),
 });
 
-export const updateBookSchema = z.object({
-  title: z.string().min(1).optional(),
-  author: z.string().min(1).optional(),
-  year: z.number().int().min(1000).max(new Date().getFullYear()).optional(),
-  isbn: z.string().min(10).optional(),
+export const updateBookSchema = createBookSchema.partial().extend({
   available: z.boolean().optional(),
 });
 
-export const createUserSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.email("Invalid email address"),
-});
-
 export const createLoanSchema = z.object({
-  userId: z.string().min(1, "userId is required"),
-  bookId: z.string().min(1, "bookId is required"),
+  bookId: uuidField,
 });
 
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateBookInput = z.infer<typeof createBookSchema>;
 export type UpdateBookInput = z.infer<typeof updateBookSchema>;
-export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type CreateLoanInput = z.infer<typeof createLoanSchema>;
