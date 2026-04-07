@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import { authService } from "../services/authService";
-import { RegisterInput, LoginInput } from "../schemas";
+import {
+  LoginInput,
+  RegisterInput,
+  RequestPasswordResetInput,
+  ResetPasswordInput,
+} from "../schemas";
 import { handleAsync } from "../utils/handleAsync";
 
 export const authController = {
@@ -12,6 +17,18 @@ export const authController = {
   login: handleAsync(async (req, res) => {
     const result = await authService.login(req.body as LoginInput);
     res.json(result);
+  }),
+
+  requestPasswordReset: handleAsync(async (req, res) => {
+    res.json(
+      await authService.requestPasswordReset(
+        req.body as RequestPasswordResetInput,
+      ),
+    );
+  }),
+
+  resetPassword: handleAsync(async (req, res) => {
+    res.json(await authService.resetPassword(req.body as ResetPasswordInput));
   }),
 
   refresh: handleAsync(async (req: Request, res: Response) => {

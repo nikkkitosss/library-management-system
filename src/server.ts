@@ -1,11 +1,9 @@
 import "dotenv/config";
-import { validateEnv } from "./utils/env";
-
-validateEnv();
 
 import app from "./app";
+import CONFIG from "./config";
 
-const PORT = process.env.PORT || 3000;
+const PORT = CONFIG.port;
 
 app.listen(PORT, () => {
   console.log(

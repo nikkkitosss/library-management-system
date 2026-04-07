@@ -1,8 +1,33 @@
 import bcrypt from "bcryptjs";
 import prisma from "../db/client";
-import { RegisterInput, LoginInput } from "../schemas";
-import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt";
-import { ConflictError, UnauthorizedError } from "../utils/errors";
+import {
+  LoginInput,
+  RegisterInput,
+  RequestPasswordResetInput,
+  ResetPasswordInput,
+} from "../schemas";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyToken,
+  signPasswordResetToken,
+  verifyPasswordResetToken,
+} from "../utils/jwt";
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  UnauthorizedError,
+} from "../utils/errors";
+import { sendMail } from "../utils/sendMail";
+
+const publicUserSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  avatarUrl: true,
+} as const;
 
 function buildTokenPayload(user: { id: string; email: string; role: string }) {
   return {
@@ -36,7 +61,7 @@ export const authService = {
     const passwordHash = await bcrypt.hash(data.password, 10);
     return prisma.user.create({
       data: { name: data.name, email: data.email, passwordHash, role: "USER" },
-      select: { id: true, name: true, email: true, role: true },
+      select: publicUserSelect,
     });
   },
 
@@ -57,8 +82,58 @@ export const authService = {
         email: user.email,
         name: user.name,
         role: user.role,
+        avatarUrl: user.avatarUrl,
       },
     };
+  },
+
+  async requestPasswordReset(data: RequestPasswordResetInput) {
+    const user = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (!user) {
+      throw new NotFoundError("User with this email was not found");
+    }
+
+    const token = signPasswordResetToken(user.email);
+
+    await sendMail({
+      to: user.email,
+      subject: "Library Management System password reset",
+      text: `Use this token to reset your password within 15 minutes:\n\n${token}`,
+      html: `<p>Use this token to reset your password within 15 minutes:</p><pre>${token}</pre>`,
+    });
+
+    return {
+      message: "Password reset email has been sent.",
+    };
+  },
+
+  async resetPassword(data: ResetPasswordInput) {
+    let payload: { email: string; purpose: "password-reset" };
+
+    try {
+      payload = verifyPasswordResetToken(data.token);
+    } catch {
+      throw new BadRequestError("Invalid or expired reset token");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: payload.email },
+    });
+
+    if (!user) {
+      throw new BadRequestError("Invalid or expired reset token");
+    }
+
+    const passwordHash = await bcrypt.hash(data.password, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+
+    return { message: "Password has been reset successfully." };
   },
 
   async refresh(token: string) {
