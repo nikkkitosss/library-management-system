@@ -1,20 +1,24 @@
 import express from "express";
-import authRoutes from "./routes/auth.routes";
-import bookRoutes from "./routes/books.routes";
-import userRoutes from "./routes/users.routes";
-import loanRoutes from "./routes/loans.routes";
+import fs from "node:fs";
+import path from "node:path";
+import routes from "./routes";
+import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
+const uploadsDir = path.resolve(process.cwd(), "uploads");
+
+fs.mkdirSync(path.resolve(uploadsDir, "avatars"), { recursive: true });
 
 app.use(express.json());
+app.use("/uploads", express.static(uploadsDir));
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-app.use("/auth", authRoutes);
-app.use("/books", bookRoutes);
-app.use("/users", userRoutes);
-app.use("/loans", loanRoutes);
+app.use("/api", routes);
+app.use(routes);
+
+app.use(notFound);
 
 app.use(errorHandler);
 

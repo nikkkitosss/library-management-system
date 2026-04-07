@@ -18,6 +18,15 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const requestPasswordResetSchema = z.object({
+  email: emailField,
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+  password: passwordField,
+});
+
 export const createBookSchema = z.object({
   title: z.string().min(1, "Title is required"),
   author: z.string().min(1, "Author is required"),
@@ -35,6 +44,10 @@ export const createLoanSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type RequestPasswordResetInput = z.infer<
+  typeof requestPasswordResetSchema
+>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type CreateBookInput = z.infer<typeof createBookSchema>;
 export type UpdateBookInput = z.infer<typeof updateBookSchema>;
 export type CreateLoanInput = z.infer<typeof createLoanSchema>;
